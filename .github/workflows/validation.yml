@@ -37,9 +37,9 @@ jobs:
           set -Eeuo pipefail
           evidence="$RUNNER_TEMP/gooo-bounded-repair-proposal-projector-${GITHUB_RUN_ID}"
           mkdir -p "$evidence"
-          files="$(git ls-files '*.go')"
-          if [[ -n "$files" ]]; then
-            gofmt -d -e $files | tee "$evidence/gofmt.diff" || true
+          mapfile -t files < <(git ls-files '*.go')
+          if (( ${#files[@]} > 0 )); then
+            gofmt -d -e "${files[@]}" | tee "$evidence/gofmt.diff" || true
           else
             : > "$evidence/gofmt.diff"
           fi

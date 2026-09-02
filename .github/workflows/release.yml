@@ -42,7 +42,10 @@ jobs:
         run: |
           set -Eeuo pipefail
           [[ "$RELEASE_TAG" =~ ^v0\.1\.[0-9]+$ ]]
-          ! git show-ref --tags --verify --quiet "refs/tags/$RELEASE_TAG"
+          if git show-ref --tags --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo "tag already exists; immutable history is preserved" >&2
+            exit 1
+          fi
           ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1
 
       - name: Re-run conformance on main
