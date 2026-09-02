@@ -225,11 +225,19 @@ func validateRepairSeed(seed RepairSeed, evidence EvidenceRecord, nodes map[stri
 	if len(seed.TargetSemanticIDs) == 0 || !allNodesExist(seed.TargetSemanticIDs, nodes) || !sameStrings(seed.TargetSemanticIDs, evidence.TargetSemanticIDs) {
 		return seedRefuted
 	}
-	if len(seed.AllowedOperations) == 0 || len(seed.Preconditions) == 0 || len(seed.ClaimedChangedCells) == 0 || len(seed.UnchangedBoundary) == 0 || len(seed.ExpectedEvidence) == 0 || len(seed.ValidationPlan) == 0 || len(seed.CapabilityEffectBudget.Capabilities) == 0 || len(seed.CapabilityEffectBudget.Effects) == 0 {
+	if len(seed.AllowedOperations) == 0 {
 		return seedUnknown
 	}
-	if len(seed.AllowedOperations) != 1 || seed.AllowedOperations[0].Kind != proposalOperationKind || seed.AllowedOperations[0].Effect != "PROPOSAL_ONLY" || !sameStrings(seed.AllowedOperations[0].TargetSemanticIDs, seed.TargetSemanticIDs) {
+	for _, operation := range seed.AllowedOperations {
+		if forbiddenKind(operation.Kind) || operation.Effect != "PROPOSAL_ONLY" {
+			return seedRefuted
+		}
+	}
+	if len(seed.AllowedOperations) != 1 || seed.AllowedOperations[0].Kind != proposalOperationKind || !sameStrings(seed.AllowedOperations[0].TargetSemanticIDs, seed.TargetSemanticIDs) {
 		return seedRefuted
+	}
+	if len(seed.Preconditions) == 0 || len(seed.ClaimedChangedCells) == 0 || len(seed.UnchangedBoundary) == 0 || len(seed.ExpectedEvidence) == 0 || len(seed.ValidationPlan) == 0 || len(seed.CapabilityEffectBudget.Capabilities) == 0 || len(seed.CapabilityEffectBudget.Effects) == 0 {
+		return seedUnknown
 	}
 	if len(seed.ForbiddenOperations) != 6 {
 		return seedUnknown
