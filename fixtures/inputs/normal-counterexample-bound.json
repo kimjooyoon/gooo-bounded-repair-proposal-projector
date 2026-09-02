@@ -1,8 +1,54 @@
 {
   "schema": "gooo/bounded-repair-proposal-projector/protocol/v1/input/v1",
   "case_id": "normal-counterexample-bound",
-  "semantic_graph": {"schema": "gooo/semantic-graph/v1", "identity": {"repository": "kimjooyoon/gooo-example", "release_id": "rel-102", "tag": "v0.1.1", "commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "asset": "semantic-graph.json", "asset_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"}, "immutable": true, "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "nodes": [{"id": "semantic.rule.guard", "kind": "rule", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "contract_cell_id": "cell.guard"}, {"id": "semantic.rule.other", "kind": "rule", "digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777", "contract_cell_id": "cell.other"}], "edges": []},
-  "evidence": {"schema": "gooo/conformance-evidence/v1", "immutable": true, "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "graph_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "terminal_state": "FIXED_POINT", "records": [{"id": "ev-counter-02", "status": "FAILED", "immutable": true, "graph_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "proof_choice": "COHERENCE", "indicator_class": "OUTCOME", "target_semantic_ids": ["semantic.rule.guard"], "causal_edge_ids": [], "counterexample_id": "ce-02", "unknown": null, "reason": "FAILED_CONFORMANCE", "repair": {"target_semantic_ids": ["semantic.rule.guard"], "allowed_operations": [{"id": "op.proposal", "kind": "DECLARE_REPAIR_PROPOSAL", "target_semantic_ids": ["semantic.rule.guard"], "effect": "PROPOSAL_ONLY"}], "forbidden_operations": [{"id": "forbidden.apply", "kind": "APPLY_CODE", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"}, {"id": "forbidden.repository-write", "kind": "WRITE_INPUT_REPOSITORY", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"}, {"id": "forbidden.commit", "kind": "COMMIT", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"}, {"id": "forbidden.merge", "kind": "MERGE", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"}, {"id": "forbidden.release", "kind": "PUBLISH_RELEASE", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"}, {"id": "forbidden.delete", "kind": "DELETE_ARTIFACT", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"}], "preconditions": [{"id": "pre.graph", "kind": "GRAPH_DIGEST_MATCH", "target_semantic_ids": ["semantic.rule.guard"], "required_value": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}, {"id": "pre.failure", "kind": "FAILED_CONFORMANCE", "target_semantic_ids": ["semantic.rule.guard"], "required_value": "FAILED"}], "claimed_changed_cells": [{"semantic_id": "semantic.rule.guard", "contract_cell_id": "cell.guard", "before_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "after_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666", "evidence_id": "ev-counter-02"}], "unchanged_boundary": [{"id": "boundary.other", "kind": "UNTOUCHED_SEMANTIC_NODE", "semantic_ids": ["semantic.rule.other"], "must_remain_unchanged": true}, {"id": "boundary.runtime", "kind": "UNTOUCHED_RUNTIME", "semantic_ids": ["semantic.rule.other"], "must_remain_unchanged": true}], "expected_evidence": [{"id": "expected.replay", "kind": "CONFORMANCE_REPLAY", "target_semantic_ids": ["semantic.rule.guard"], "required_status": "CLOSED", "receipt_fields": ["input_digest", "proposal_digest"]}, {"id": "expected.boundary", "kind": "BOUNDARY_RECEIPT", "target_semantic_ids": ["semantic.rule.other"], "required_status": "CLOSED", "receipt_fields": ["unchanged_digest"]}], "validation_plan": [{"id": "validation.graph", "kind": "REPLAY_SEMANTIC_GRAPH", "target_semantic_ids": ["semantic.rule.guard"], "required_evidence": ["expected.replay"], "authority": "ci"}, {"id": "validation.counterexample", "kind": "REFUTE_FAILURE", "target_semantic_ids": ["semantic.rule.guard"], "required_evidence": ["expected.replay"], "authority": "ci"}, {"id": "validation.boundary", "kind": "CHECK_UNCHANGED_BOUNDARY", "target_semantic_ids": ["semantic.rule.other"], "required_evidence": ["expected.boundary"], "authority": "ci"}], "capability_effect_budget": {"capabilities": [{"id": "semantic_read", "limit": 1, "may_apply": false}, {"id": "proposal_emit", "limit": 1, "may_apply": false}], "effects": [{"id": "read_immutable_graph", "limit": 1, "may_apply": false}, {"id": "emit_caller_output", "limit": 1, "may_apply": false}]}}]},
+  "semantic_graph": {
+    "schema": "gooo/semantic-graph/v1",
+    "identity": {"repository": "kimjooyoon/gooo-example", "release_id": "rel-102", "tag": "v0.1.1", "commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "asset": "semantic-graph.json", "asset_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"},
+    "immutable": true,
+    "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "nodes": [
+      {"id": "semantic.rule.guard", "kind": "rule", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "contract_cell_id": "cell.guard"},
+      {"id": "semantic.rule.other", "kind": "rule", "digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777", "contract_cell_id": "cell.other"}
+    ],
+    "edges": []
+  },
+  "evidence": {
+    "schema": "gooo/conformance-evidence/v1", "immutable": true, "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "graph_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "terminal_state": "FIXED_POINT",
+    "records": [{
+      "id": "ev-counter-02", "status": "FAILED", "immutable": true, "graph_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "proof_choice": "COHERENCE", "indicator_class": "OUTCOME", "target_semantic_ids": ["semantic.rule.guard"], "causal_edge_ids": [], "counterexample_id": "ce-02", "unknown": null, "reason": "FAILED_CONFORMANCE",
+      "repair": {
+        "target_semantic_ids": ["semantic.rule.guard"],
+        "allowed_operations": [{"id": "op.proposal", "kind": "DECLARE_REPAIR_PROPOSAL", "target_semantic_ids": ["semantic.rule.guard"], "effect": "PROPOSAL_ONLY"}],
+        "forbidden_operations": [
+          {"id": "forbidden.apply", "kind": "APPLY_CODE", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"},
+          {"id": "forbidden.repository-write", "kind": "WRITE_INPUT_REPOSITORY", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"},
+          {"id": "forbidden.commit", "kind": "COMMIT", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"},
+          {"id": "forbidden.merge", "kind": "MERGE", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"},
+          {"id": "forbidden.release", "kind": "PUBLISH_RELEASE", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"},
+          {"id": "forbidden.delete", "kind": "DELETE_ARTIFACT", "target_semantic_ids": [], "effect": "NEVER_EXECUTE"}
+        ],
+        "preconditions": [
+          {"id": "pre.graph", "kind": "GRAPH_DIGEST_MATCH", "target_semantic_ids": ["semantic.rule.guard"], "required_value": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+          {"id": "pre.failure", "kind": "FAILED_CONFORMANCE", "target_semantic_ids": ["semantic.rule.guard"], "required_value": "FAILED"}
+        ],
+        "claimed_changed_cells": [{"semantic_id": "semantic.rule.guard", "contract_cell_id": "cell.guard", "before_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "after_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666", "evidence_id": "ev-counter-02"}],
+        "unchanged_boundary": [
+          {"id": "boundary.other", "kind": "UNTOUCHED_SEMANTIC_NODE", "semantic_ids": ["semantic.rule.other"], "must_remain_unchanged": true},
+          {"id": "boundary.runtime", "kind": "UNTOUCHED_RUNTIME", "semantic_ids": ["semantic.rule.other"], "must_remain_unchanged": true}
+        ],
+        "expected_evidence": [
+          {"id": "expected.replay", "kind": "CONFORMANCE_REPLAY", "target_semantic_ids": ["semantic.rule.guard"], "required_status": "CLOSED", "receipt_fields": ["input_digest", "proposal_digest"]},
+          {"id": "expected.boundary", "kind": "BOUNDARY_RECEIPT", "target_semantic_ids": ["semantic.rule.other"], "required_status": "CLOSED", "receipt_fields": ["unchanged_digest"]}
+        ],
+        "validation_plan": [
+          {"id": "validation.graph", "kind": "REPLAY_SEMANTIC_GRAPH", "target_semantic_ids": ["semantic.rule.guard"], "required_evidence": ["expected.replay"], "authority": "ci"},
+          {"id": "validation.counterexample", "kind": "REFUTE_FAILURE", "target_semantic_ids": ["semantic.rule.guard"], "required_evidence": ["expected.replay"], "authority": "ci"},
+          {"id": "validation.boundary", "kind": "CHECK_UNCHANGED_BOUNDARY", "target_semantic_ids": ["semantic.rule.other"], "required_evidence": ["expected.boundary"], "authority": "ci"}
+        ],
+        "capability_effect_budget": {"capabilities": [{"id": "semantic_read", "limit": 1, "may_apply": false}, {"id": "proposal_emit", "limit": 1, "may_apply": false}], "effects": [{"id": "read_immutable_graph", "limit": 1, "may_apply": false}, {"id": "emit_caller_output", "limit": 1, "may_apply": false}]}
+      }
+    }]
+  },
   "unknown": null,
   "counterexample": {"id": "ce-02", "graph_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "failure_evidence_id": "ev-counter-02", "target_semantic_ids": ["semantic.rule.guard"], "observed_value": "UNKNOWN", "expected_value": "FIXED_POINT", "observed_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444", "expected_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"},
   "utility": null,
