@@ -68,7 +68,7 @@ func RunConformance(root, sourcePath, corpusPath, outputDir string) (Conformance
 			return ConformanceIndex{}, fmt.Errorf("%s DETERMINISTIC_REPLAY_MISMATCH", item.CaseID)
 		}
 		if first.State != item.ExpectedState || vectorSlice(first.ExactVector) == nil || !sameInts(vectorSlice(first.ExactVector), item.ExpectedVector) {
-			return ConformanceIndex{}, fmt.Errorf("%s EXPECTATION_MISMATCH", item.CaseID)
+			return ConformanceIndex{}, fmt.Errorf("%s EXPECTATION_MISMATCH state=%s vector=%v want=%v incidents=%v frontier=%v", item.CaseID, first.State, vectorSlice(first.ExactVector), item.ExpectedVector, first.RefutedIncidents, first.UnknownFrontier)
 		}
 		incidentIDs := make([]string, 0, len(first.RefutedIncidents))
 		for _, incident := range first.RefutedIncidents {
