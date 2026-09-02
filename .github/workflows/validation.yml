@@ -1,0 +1,77 @@
+name: Validate bounded repair proposal projector
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bounded-repair-projector-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Go 1.27
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.x'
+          check-latest: true
+          cache: false
+
+      - name: Check toolchain identity
+        run: test "$(go env GOVERSION)" = "go1.27.0"
+
+      - name: Run gofmt inspection
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          evidence="$RUNNER_TEMP/gooo-bounded-repair-proposal-projector-${GITHUB_RUN_ID}"
+          mkdir -p "$evidence"
+          mapfile -t files < <(git ls-files '*.go')
+          if (( ${#files[@]} > 0 )); then
+            gofmt -d -e "${files[@]}" | tee "$evidence/gofmt.diff" || true
+          else
+            : > "$evidence/gofmt.diff"
+          fi
+
+      - name: Run actionlint
+        uses: raven-actions/actionlint@v2
+
+      - name: Run build, test, vet, and conformance gates
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          evidence="$RUNNER_TEMP/gooo-bounded-repair-proposal-projector-${GITHUB_RUN_ID}"
+          mkdir -p "$evidence/conformance"
+          go test ./... | tee "$evidence/go-test.txt"
+          go vet ./... | tee "$evidence/go-vet.txt"
+          go build -trimpath ./... | tee "$evidence/go-build.txt"
+          go run ./cmd/gooo-repair-proposal-projector conformance \
+            --root "$GITHUB_WORKSPACE" \
+            --source "$GITHUB_WORKSPACE/.gooo/repair-proposal-projector.gooo" \
+            --corpus "$GITHUB_WORKSPACE/fixtures/corpus.json" \
+            --output-dir "$evidence/conformance" | tee "$evidence/conformance.txt"
+          jq -e '
+            .total == 12
+            and .states == {normal:4,unknown:4,refuted:4}
+            and ([.results[].state] | sort) == ["CLOSED","CLOSED","CLOSED","CLOSED","REFUTED","REFUTED","REFUTED","REFUTED","UNKNOWN","UNKNOWN","UNKNOWN","UNKNOWN"]
+          ' "$evidence/conformance/conformance-index.json"
+
+      - name: Preserve failed-run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gooo-bounded-repair-proposal-projector-ci-${{ github.run_id }}
+          path: ${{ runner.temp }}/gooo-bounded-repair-proposal-projector-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 30

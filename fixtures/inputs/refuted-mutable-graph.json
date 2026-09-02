@@ -1,0 +1,10 @@
+{
+  "schema": "gooo/bounded-repair-proposal-projector/protocol/v1/input/v1",
+  "case_id": "refuted-mutable-graph",
+  "semantic_graph": {"schema": "gooo/semantic-graph/v1", "identity": {"repository": "kimjooyoon/gooo-example", "release_id": "rel-109", "tag": "v0.1.8", "commit_sha": "5656565656565656565656565656565656565656", "asset": "semantic-graph.json", "asset_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"}, "immutable": false, "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "nodes": [{"id": "semantic.rule.guard", "kind": "rule", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "contract_cell_id": "cell.guard"}], "edges": []},
+  "evidence": {"schema": "gooo/conformance-evidence/v1", "immutable": true, "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "graph_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "terminal_state": "FIXED_POINT", "records": []},
+  "unknown": null,
+  "counterexample": null,
+  "utility": null,
+  "operational_events": []
+}

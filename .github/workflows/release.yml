@@ -1,0 +1,153 @@
+name: Draft-first immutable patch release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "New annotated v* tag on a green main commit"
+        required: true
+        type: string
+      publish:
+        description: "Publish only after draft asset and immutable metadata checks"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Check out green main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Go 1.27
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.x'
+          check-latest: true
+          cache: false
+
+      - name: Refuse version reuse and require patch tag
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$RELEASE_TAG" =~ ^v0\.1\.[0-9]+$ ]]
+          if git show-ref --tags --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo "tag already exists; immutable history is preserved" >&2
+            exit 1
+          fi
+          ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1
+
+      - name: Re-run conformance on main
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          output="$RUNNER_TEMP/gooo-bounded-repair-proposal-projector-release-${GITHUB_RUN_ID}"
+          mkdir -p "$output"
+          go test ./...
+          go vet ./...
+          go build -trimpath ./...
+          go run ./cmd/gooo-repair-proposal-projector conformance \
+            --root "$GITHUB_WORKSPACE" \
+            --source "$GITHUB_WORKSPACE/.gooo/repair-proposal-projector.gooo" \
+            --corpus "$GITHUB_WORKSPACE/fixtures/corpus.json" \
+            --output-dir "$output/conformance"
+
+      - name: Create annotated tag and draft release first
+        id: draft
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          commit_sha="$(git rev-parse HEAD)"
+          tag_object="$(gh api \
+            --method POST \
+            "/repos/$GITHUB_REPOSITORY/git/tags" \
+            -f tag="$RELEASE_TAG" \
+            -f message="gooo bounded repair proposal projector $RELEASE_TAG" \
+            -f object="$commit_sha" \
+            -f type=commit --jq .sha)"
+          gh api --method POST "/repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$RELEASE_TAG" -f sha="$tag_object"
+          release_id="$(gh api \
+            --method POST \
+            "/repos/$GITHUB_REPOSITORY/releases" \
+            -f tag_name="$RELEASE_TAG" \
+            -f name="Gooo bounded repair proposal projector $RELEASE_TAG" \
+            -f body="Draft-first immutable patch release. Tags, releases, assets, and versions are never deleted or reused." \
+            -F draft=true --jq .id)"
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+
+      - name: Build exact digest-bound assets
+        id: assets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          root="$RUNNER_TEMP/gooo-bounded-repair-proposal-projector-release-${GITHUB_RUN_ID}"
+          asset_root="$root/assets"
+          mkdir -p "$asset_root"
+          source_asset="gooo-bounded-repair-proposal-projector-${RELEASE_TAG}.tar.gz"
+          evidence_asset="gooo-bounded-repair-proposal-projector-${RELEASE_TAG}-evidence.tar.gz"
+          git archive --format=tar.gz --prefix="gooo-bounded-repair-proposal-projector-${RELEASE_TAG}/" HEAD > "$asset_root/$source_asset"
+          tar -C "$root/conformance" -czf "$asset_root/$evidence_asset" .
+          source_digest="sha256:$(sha256sum "$asset_root/$source_asset" | awk '{print $1}')"
+          evidence_digest="sha256:$(sha256sum "$asset_root/$evidence_asset" | awk '{print $1}')"
+          jq -S -n \
+            --arg schema "gooo/bounded-repair-proposal-projector/release-manifest/v1" \
+            --arg tag "$RELEASE_TAG" \
+            --arg commit_sha "$(git rev-parse HEAD)" \
+            --arg source_asset "$source_asset" \
+            --arg source_digest "$source_digest" \
+            --arg evidence_asset "$evidence_asset" \
+            --arg evidence_digest "$evidence_digest" \
+            '{schema:$schema,tag:$tag,commit_sha:$commit_sha,source_asset:$source_asset,source_asset_digest:$source_digest,evidence_asset:$evidence_asset,evidence_asset_digest:$evidence_digest,immutable:true,authority:{proposal_generation:1,apply:0,commit:0,merge:0,runtime_apply:0}}' > "$asset_root/release-manifest.json"
+          sha256sum "$asset_root"/* > "$asset_root/SHA256SUMS"
+          echo "asset_root=$asset_root" >> "$GITHUB_OUTPUT"
+
+      - name: Upload only new assets to the draft
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          asset_root="${{ steps.assets.outputs.asset_root }}"
+          gh release upload "$RELEASE_TAG" "$asset_root"/* --repo "$GITHUB_REPOSITORY" --clobber=false
+
+      - name: Verify draft asset digests and immutable release metadata
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          release_json="$(gh api "/repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+          test "$(jq -r .draft <<<"$release_json")" = true
+          jq -e --arg tag "$RELEASE_TAG" '.tag_name == $tag and (.assets | length) == 4' <<<"$release_json"
+          while read -r digest path; do
+            asset="$(basename "$path")"
+            actual="$(jq -r --arg name "$asset" '.assets[] | select(.name == $name) | .digest' <<<"$release_json")"
+            test "$actual" = "sha256:$digest"
+          done < "${{ steps.assets.outputs.asset_root }}/SHA256SUMS"
+
+      - name: Publish after draft verification only
+        if: ${{ inputs.publish }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          release_id="${{ steps.draft.outputs.release_id }}"
+          gh api --method PATCH "/repos/$GITHUB_REPOSITORY/releases/$release_id" -F draft=false >/dev/null
+          published="$(gh api "/repos/$GITHUB_REPOSITORY/releases/$release_id")"
+          test "$(jq -r .draft <<<"$published")" = false
+          test "$(jq -r .immutable <<<"$published")" = true
+
+      - name: Preserve failed release context
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gooo-bounded-repair-proposal-projector-release-${{ github.run_id }}
+          path: ${{ runner.temp }}/gooo-bounded-repair-proposal-projector-release-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 90

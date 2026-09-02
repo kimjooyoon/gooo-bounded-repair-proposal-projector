@@ -1,0 +1,10 @@
+{
+  "schema": "gooo/bounded-repair-proposal-projector/protocol/v1/input/v1",
+  "case_id": "refuted-accidental-execution",
+  "semantic_graph": {"schema": "gooo/semantic-graph/v1", "identity": {"repository": "kimjooyoon/gooo-example", "release_id": "rel-112", "tag": "v0.1.11", "commit_sha": "bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc", "asset": "semantic-graph.json", "asset_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"}, "immutable": true, "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "nodes": [{"id": "semantic.rule.guard", "kind": "rule", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "contract_cell_id": "cell.guard"}], "edges": []},
+  "evidence": {"schema": "gooo/conformance-evidence/v1", "immutable": true, "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "graph_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "terminal_state": "FIXED_POINT", "records": []},
+  "unknown": null,
+  "counterexample": null,
+  "utility": null,
+  "operational_events": [{"id": "accidental-apply-01", "kind": "APPLY_CODE", "executed": true, "target": "input-repository"}]
+}
