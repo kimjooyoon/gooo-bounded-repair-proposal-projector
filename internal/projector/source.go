@@ -22,6 +22,8 @@ func CompileSource(sourcePath string, source []byte) (SemanticIR, Contract, erro
 			continue
 		}
 		switch {
+		case strings.HasPrefix(line, "@gooo "):
+			continue
 		case strings.HasPrefix(line, "contract "):
 			attrs, err := parseAttributes(strings.TrimPrefix(line, "contract "))
 			if err != nil {
