@@ -4,11 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "New annotated v* tag on a green main commit"
+        description: "New annotated v* tag, or the exact tag of an existing draft when resuming"
         required: true
         type: string
+      release_id:
+        description: "Exact draft release ID when resuming; leave empty to create"
+        required: false
+        type: string
       publish:
-        description: "Publish only after draft asset and immutable metadata checks"
+        description: "Publish an existing verified draft after its asset digests are checked"
         required: true
         default: false
         type: boolean
@@ -23,6 +27,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_ID_INPUT: ${{ inputs.release_id }}
+      PUBLISH: ${{ inputs.publish }}
     steps:
       - name: Check out green main
         uses: actions/checkout@v4
@@ -37,18 +43,20 @@ jobs:
           check-latest: true
           cache: false
 
-      - name: Refuse version reuse and require patch tag
+      - name: Validate release mode and identity
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$RELEASE_TAG" =~ ^v0\.1\.[0-9]+$ ]]
-          if git show-ref --tags --verify --quiet "refs/tags/$RELEASE_TAG"; then
-            echo "tag already exists; immutable history is preserved" >&2
+          if [[ "$PUBLISH" == "true" ]]; then
+            [[ "$RELEASE_ID_INPUT" =~ ^[0-9]+$ ]]
+          elif [[ -n "$RELEASE_ID_INPUT" ]]; then
+            echo "release_id is only accepted when resuming a draft" >&2
             exit 1
           fi
-          ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1
 
       - name: Re-run conformance on main
+        if: ${{ inputs.publish == false }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -64,10 +72,19 @@ jobs:
             --output-dir "$output/conformance"
 
       - name: Create annotated tag and draft release first
-        id: draft
+        id: create
+        if: ${{ inputs.publish == false }}
         shell: bash
         run: |
           set -Eeuo pipefail
+          if git show-ref --tags --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo "tag already exists; immutable history is preserved" >&2
+            exit 1
+          fi
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release already exists; immutable history is preserved" >&2
+            exit 1
+          fi
           commit_sha="$(git rev-parse HEAD)"
           tag_object="$(gh api \
             --method POST \
@@ -86,8 +103,20 @@ jobs:
             -F draft=true --jq .id)"
           echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
 
+      - name: Use exact existing draft release
+        id: resume
+        if: ${{ inputs.publish == true }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          release_json="$(gh api "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID_INPUT")"
+          test "$(jq -r .tag_name <<<"$release_json")" = "$RELEASE_TAG"
+          test "$(jq -r .draft <<<"$release_json")" = true
+          echo "release_id=$RELEASE_ID_INPUT" >> "$GITHUB_OUTPUT"
+
       - name: Build exact digest-bound assets
         id: assets
+        if: ${{ inputs.publish == false }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -113,6 +142,7 @@ jobs:
           echo "asset_root=$asset_root" >> "$GITHUB_OUTPUT"
 
       - name: Upload only new assets to the draft
+        if: ${{ inputs.publish == false }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -123,21 +153,25 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          release_json="$(gh api "/repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+          release_id="${{ steps.create.outputs.release_id || steps.resume.outputs.release_id }}"
+          release_json="$(gh api "/repos/$GITHUB_REPOSITORY/releases/$release_id")"
+          test "$(jq -r .tag_name <<<"$release_json")" = "$RELEASE_TAG"
           test "$(jq -r .draft <<<"$release_json")" = true
-          jq -e --arg tag "$RELEASE_TAG" '.tag_name == $tag and (.assets | length) == 4' <<<"$release_json"
-          while read -r digest path; do
-            asset="$(basename "$path")"
-            actual="$(jq -r --arg name "$asset" '.assets[] | select(.name == $name) | .digest' <<<"$release_json")"
-            test "$actual" = "sha256:$digest"
-          done < "${{ steps.assets.outputs.asset_root }}/SHA256SUMS"
+          jq -e '(.assets | length) == 4 and all(.assets[]; (.digest | type) == "string" and startswith("sha256:"))' <<<"$release_json"
+          if [[ "$PUBLISH" == "false" ]]; then
+            while read -r digest path; do
+              asset="$(basename "$path")"
+              actual="$(jq -r --arg name "$asset" '.assets[] | select(.name == $name) | .digest' <<<"$release_json")"
+              test "$actual" = "sha256:$digest"
+            done < "${{ steps.assets.outputs.asset_root }}/SHA256SUMS"
+          fi
 
       - name: Publish after draft verification only
-        if: ${{ inputs.publish }}
+        if: ${{ inputs.publish == true }}
         shell: bash
         run: |
           set -Eeuo pipefail
-          release_id="${{ steps.draft.outputs.release_id }}"
+          release_id="${{ steps.resume.outputs.release_id }}"
           gh api --method PATCH "/repos/$GITHUB_REPOSITORY/releases/$release_id" -F draft=false >/dev/null
           published="$(gh api "/repos/$GITHUB_REPOSITORY/releases/$release_id")"
           test "$(jq -r .draft <<<"$published")" = false
