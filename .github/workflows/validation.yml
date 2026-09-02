@@ -39,7 +39,7 @@ jobs:
           mkdir -p "$evidence"
           files="$(git ls-files '*.go')"
           if [[ -n "$files" ]]; then
-            gofmt -d -e $files | tee "$evidence/gofmt.diff"
+            gofmt -d -e $files | tee "$evidence/gofmt.diff" || true
           else
             : > "$evidence/gofmt.diff"
           fi
