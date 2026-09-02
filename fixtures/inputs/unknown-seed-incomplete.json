@@ -1,0 +1,10 @@
+{
+  "schema": "gooo/bounded-repair-proposal-projector/protocol/v1/input/v1",
+  "case_id": "unknown-seed-incomplete",
+  "semantic_graph": {"schema": "gooo/semantic-graph/v1", "identity": {"repository": "kimjooyoon/gooo-example", "release_id": "rel-105", "tag": "v0.1.4", "commit_sha": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "asset": "semantic-graph.json", "asset_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"}, "immutable": true, "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "nodes": [{"id": "semantic.rule.guard", "kind": "rule", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "contract_cell_id": "cell.guard"}], "edges": []},
+  "evidence": {"schema": "gooo/conformance-evidence/v1", "immutable": true, "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "graph_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "terminal_state": "FIXED_POINT", "records": [{"id": "ev-unknown-seed", "status": "FAILED", "immutable": true, "graph_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "proof_choice": "COHERENCE", "indicator_class": "DRIVER", "target_semantic_ids": ["semantic.rule.guard"], "causal_edge_ids": [], "counterexample_id": "", "unknown": null, "reason": "FAILED_CONFORMANCE", "repair": {"target_semantic_ids": ["semantic.rule.guard"], "allowed_operations": [{"id": "op.proposal", "kind": "DECLARE_REPAIR_PROPOSAL", "target_semantic_ids": ["semantic.rule.guard"], "effect": "PROPOSAL_ONLY"}], "forbidden_operations": [], "preconditions": [], "claimed_changed_cells": [], "unchanged_boundary": [], "expected_evidence": [], "validation_plan": [], "capability_effect_budget": {"capabilities": [], "effects": []}}}]},
+  "unknown": {"stage": "coherence", "step": "seed_validation", "reason": "TYPED_REPAIR_SEED_INCOMPLETE", "unknown_class": "INCOMPLETE", "next_operation": "SUPPLY_TYPED_REPAIR_SEED", "blocked_by": "ev-unknown-seed"},
+  "counterexample": null,
+  "utility": null,
+  "operational_events": []
+}

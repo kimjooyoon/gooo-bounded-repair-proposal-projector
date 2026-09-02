@@ -1,0 +1,10 @@
+{
+  "schema": "gooo/bounded-repair-proposal-projector/protocol/v1/input/v1",
+  "case_id": "unknown-stale-evidence",
+  "semantic_graph": {"schema": "gooo/semantic-graph/v1", "identity": {"repository": "kimjooyoon/gooo-example", "release_id": "rel-106", "tag": "v0.1.5", "commit_sha": "ffffffffffffffffffffffffffffffffffffffff", "asset": "semantic-graph.json", "asset_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"}, "immutable": true, "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "nodes": [{"id": "semantic.rule.guard", "kind": "rule", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "contract_cell_id": "cell.guard"}], "edges": []},
+  "evidence": {"schema": "gooo/conformance-evidence/v1", "immutable": true, "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "graph_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999", "terminal_state": "FIXED_POINT", "records": []},
+  "unknown": {"stage": "foundation", "step": "evidence_binding", "reason": "STALE_GRAPH_EVIDENCE", "unknown_class": "STALE", "next_operation": "REFRESH_EVIDENCE_FOR_GRAPH_DIGEST", "blocked_by": "semantic_graph.digest"},
+  "counterexample": null,
+  "utility": null,
+  "operational_events": []
+}
