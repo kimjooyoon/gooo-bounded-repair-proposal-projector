@@ -157,7 +157,7 @@ jobs:
           release_json="$(gh api "/repos/$GITHUB_REPOSITORY/releases/$release_id")"
           test "$(jq -r .tag_name <<<"$release_json")" = "$RELEASE_TAG"
           test "$(jq -r .draft <<<"$release_json")" = true
-          jq -e '(.assets | length) == 4 and all(.assets[]; (.digest | type) == "string" and startswith("sha256:"))' <<<"$release_json"
+          jq -e '(.assets | length) == 4 and all(.assets[]; (.digest | (type == "string" and startswith("sha256:"))))' <<<"$release_json"
           if [[ "$PUBLISH" == "false" ]]; then
             while read -r digest path; do
               asset="$(basename "$path")"
