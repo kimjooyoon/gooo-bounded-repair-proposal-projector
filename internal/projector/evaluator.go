@@ -352,7 +352,7 @@ func buildEvents(input Input, dossier Dossier) []ProposalEvent {
 	for index, incident := range dossier.RefutedIncidents {
 		events = append(events, ProposalEvent{Schema: ProtocolSchema + "/event/v1", Ordinal: index + 1, EventID: incident.ID, EventType: incident.Kind, CaseID: input.CaseID, EvidenceID: incident.EvidenceID, TargetIDs: append([]string(nil), incident.TargetSemanticIDs...), InputDigest: inputDigestForEvent(input), Reason: incident.Reason})
 	}
-	for index, item := range dossier.UnknownFrontier {
+	for _, item := range dossier.UnknownFrontier {
 		events = append(events, ProposalEvent{Schema: ProtocolSchema + "/event/v1", Ordinal: len(events) + 1, EventID: item.ID, EventType: "UNKNOWN_FRONTIER", CaseID: input.CaseID, TargetIDs: append([]string(nil), item.TargetSemanticIDs...), InputDigest: inputDigestForEvent(input), Reason: item.Unknown.Reason})
 	}
 	if dossier.Proposal != nil {

@@ -116,7 +116,7 @@ func WriteEvaluation(outputDir string, evaluation Evaluation) error {
 		"proposal-events.ndjson": eventsRaw,
 		"semantic-ir.json": evaluation.SemanticIRRaw,
 		"generated-evaluator.go": evaluation.GeneratedRaw,
-		"human-report.md": RenderHumanReport(evaluation.Dossier, evaluation.Events, replay),
+		"human-report.md": []byte(RenderHumanReport(evaluation.Dossier, evaluation.Events, replay)),
 	}
 	paths := make([]string, 0, len(files))
 	for path := range files {
